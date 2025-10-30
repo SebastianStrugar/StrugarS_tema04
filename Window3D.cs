@@ -6,6 +6,7 @@ using OpenTK.Input;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Security.Permissions;
 
 namespace ConsoleApp3
 {
@@ -29,14 +30,15 @@ namespace ConsoleApp3
         private List<Cube> cubes = new List<Cube>();
         private Random random = new Random();
         private double spawnCooldown = 0;
+        private bool disableGravity = false;
 
         private void SpawnCube()
         {
             var newCube = new Cube(
                 position: new Vector3(
-                    (float)(random.NextDouble() * 50),                // X între 0 și 50
+                    (float)(random.NextDouble() * 25),                // X între 0 și 25
                     18.0f,                                            // Y 18
-                    (float)(random.NextDouble() * 50)                 // Z între 0 și 50
+                    (float)(random.NextDouble() * 25)                 // Z între 0 și 25
                 ),
                 size: (float)(random.NextDouble() * 2 + 3),           // Dimensiune între 3 și 5
                 color: new Color4(
@@ -193,6 +195,10 @@ namespace ConsoleApp3
             {
                 objy.ToggleVisibility();
             }
+            if (currentKeyboard[Key.G] && !previousKeyboard[Key.G])
+            {
+                disableGravity = !disableGravity;
+            }
 
             // camera control (isometric mode)
             if (currentKeyboard[Key.W])
@@ -243,7 +249,7 @@ namespace ConsoleApp3
 
             foreach (var cube in cubes)
             {
-                cube.Update(deltaTime, 9.8f);
+                cube.Update(deltaTime, 9.8f, disableGravity);
             }
         }
 
@@ -295,6 +301,7 @@ namespace ConsoleApp3
             Console.WriteLine(" (R) - resteaza scena la valori implicite");
             Console.WriteLine(" (B) - schimbare culoare de fundal");
             Console.WriteLine(" (V) - schimbare vizibilitate linii");
+            Console.WriteLine(" (G) - Schimba gravitatia");
             Console.WriteLine(" (W,A,S,D) - deplasare camera (izometric)");
             Console.WriteLine(" Click stanga - Spawneaza cub");
             Console.WriteLine(" Click dreapta - Curata lista de cuburi");
@@ -323,11 +330,11 @@ namespace ConsoleApp3
             Color = color;
         }
 
-        public void Update(float deltaTime, float gravity)
+        public void Update(float deltaTime, float gravity, bool disableGravity)
         {
-            if (Position.Y > 0)
+            if (Position.Y > 0 && disableGravity==false)
             {
-                Position -= new Vector3(0, deltaTime * gravity, 0);
+                Position -= new Vector3(0, deltaTime * gravity * 2.1f, 0);
                 if (Position.Y < 0)
                 {
                     Position = new Vector3(Position.X, 0, Position.Z);
